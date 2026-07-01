@@ -1703,6 +1703,33 @@ function renderVote() {
     document.getElementById('vote-btns').style.display = 'block';
     document.getElementById('vote-waiting').style.display = 'none';
   }
+
+  // 🔴 ✨ เพิ่มส่วนแสดงรายชื่อคนที่ยังไม่กดโหวตทีม
+  const waitingPlayers = gs.players.filter(p => !gs.votes || !gs.votes[p.id]);
+  const waitingBox = document.getElementById('vote-waiting');
+  
+  // สร้าง HTML แสดงชื่อคนดองโหวต
+  const waitingHtml = waitingPlayers.length > 0 
+    ? `<div style="margin-top:10px; padding:8px; background:rgba(201,168,76,0.1); border:1px dashed var(--gold-dim); border-radius:6px; font-size:12px;">
+         ⏳ <span style="color:var(--gold);">กำลังรอ:</span> ${waitingPlayers.map(p => p.name).join(', ')}
+       </div>`
+    : '';
+
+  // แทรกข้อความเข้าไปต่อท้ายในกล่อง waiting หรือสร้างใหม่ใต้ปุ่ม
+  if (myVote) {
+    waitingBox.innerHTML = `รอผู้เล่นอื่นโหวต <span class="waiting-dots"></span> ${waitingHtml}`;
+  } else {
+    // ถ้าเรายังไม่โหวต ให้เอาชื่อคนอื่นที่ยังไม่โหวตมาโชว์ใต้ปุ่มด้วย
+    const existingHint = document.getElementById('vote-waiting-hint');
+    if (existingHint) existingHint.remove();
+    
+    if (waitingHtml) {
+      const hintDiv = document.createElement('div');
+      hintDiv.id = 'vote-waiting-hint';
+      hintDiv.innerHTML = waitingHtml;
+      document.getElementById('phase-vote').querySelector('.card').appendChild(hintDiv);
+    }
+  }
 }
 
 async function voteTeam(v) {
@@ -1815,15 +1842,41 @@ function renderMission() {
   const onTeam = team.includes(state.playerId);
   const hasVoted = gs.missionVotes && gs.missionVotes[state.playerId];
 
+  // 🔴 ✨ ค้นหาว่าคนในทีมภารกิจคนไหนที่ยังดองการ์ด Success/Fail
+  const waitingMissionPlayers = team.filter(id => !gs.missionVotes || !gs.missionVotes[id])
+                                    .map(id => gs.players.find(p => p.id === id)?.name || 'ผู้เล่น');
+
+  const waitingHtml = waitingMissionPlayers.length > 0
+    ? `<div style="margin-top:10px; padding:8px; background:rgba(139,32,32,0.15); border:1px dashed #E07070; border-radius:6px; font-size:12px;">
+         ⏳ <span style="color:#E07070;">รอคนส่งการ์ด:</span> ${waitingMissionPlayers.join(', ')}
+       </div>`
+    : '';
+
   if (!onTeam || hasVoted) {
     document.getElementById('mission-vote-btns').style.display = 'none';
     document.getElementById('mission-waiting').style.display = 'block';
     const votedCount = Object.keys(gs.missionVotes || {}).length;
     const teamSize = team.length;
-    document.getElementById('mission-waiting').innerHTML = `รอผลภารกิจ (${votedCount}/${teamSize}) <span class="waiting-dots"></span>`;
+    
+    // อัปเดตข้อความรอผลพร้อมรายชื่อคนดองการ์ด
+    document.getElementById('mission-waiting').innerHTML = `
+      รอผลภารกิจ (${votedCount}/${teamSize}) <span class="waiting-dots"></span>
+      ${waitingHtml}
+    `;
   } else {
     document.getElementById('mission-vote-btns').style.display = 'block';
     document.getElementById('mission-waiting').style.display = 'none';
+
+    // ถ้าเราอยู่ในทีมและยังไม่ได้กด ให้โชว์รายชื่อเพื่อนร่วมทีมที่ยังไม่กดด้านล่างปุ่มด้วย
+    const existingHint = document.getElementById('mission-waiting-hint');
+    if (existingHint) existingHint.remove();
+
+    if (waitingHtml) {
+      const hintDiv = document.createElement('div');
+      hintDiv.id = 'mission-waiting-hint';
+      hintDiv.innerHTML = waitingHtml;
+      document.getElementById('phase-mission').querySelector('.card').appendChild(hintDiv);
+    }
   }
 }
 
