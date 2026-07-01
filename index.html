@@ -2392,6 +2392,14 @@ async function handleRoomUpdate(newData) {
       }
     }
     
+    // ✨ [แก้ไขจุดนี้] รีเซ็ตสถานะความพร้อมภายในเครื่องของผู้เล่นเดิมทุกคน เพื่อให้กดพร้อมในเกมถัดไปได้
+    state.isReady = false; 
+    const readyBtn = document.getElementById('ready-btn');
+    if (readyBtn) {
+      readyBtn.disabled = false;
+      readyBtn.textContent = '✅ พร้อมแล้ว';
+    }
+
     // ซ่อนหน้าจอ Game Over หาก Host กดเริ่มเกมใหม่
     document.getElementById('overlay-end').classList.remove('show');
     showScreen('lobby');
